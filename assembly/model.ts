@@ -1,9 +1,9 @@
-import { PersistentVector, RNG, context, PersistentUnorderedMap, logging, storage, u128 } from "near-sdk-as";
+import { RNG, context, PersistentMap, u128, PersistentVector, storage } from "near-sdk-as";
 
 export enum GameState {
   Created,
   InProgress,
-  Completed
+  Completed,
 }
 
 @nearBindgen
@@ -12,8 +12,8 @@ export class GuessGame {
   gameState: GameState;
   awardAmount: u128;
   creator: string;
-  guessMap: PersistentUnorderedMap<u128,Array<string>>;
-
+  guessMap: PersistentMap<u128, PersistentVector<string>>;
+  guesses: PersistentVector<u128>;
 
   constructor() {
     let rng = new RNG<u32>(1, u32.MAX_VALUE);
@@ -23,10 +23,26 @@ export class GuessGame {
     this.gameState = GameState.Created;
     this.awardAmount = u128.Zero;
     this.creator = context.sender;
-    this.guessMap = new PersistentUnorderedMap<u128,Array<string>>("m");
+    this.guessMap = new PersistentMap<u128, PersistentVector<string>>("gMap");
+    this.guesses = new PersistentVector<u128>("guesses");
+  }
 
-
+  toString(): string {
+    return (
+      "GuessGame{" +
+      "gameId=" +
+      this.gameId.toString() +
+      ", gameState='" +
+      this.gameState.toString() +
+      "'" +
+      ", awardAmount=" +
+      this.awardAmount.toString() +
+      ", creator='" +
+      this.creator +
+      "'" +
+      "}"
+    );
   }
 }
 
-export const games = new PersistentUnorderedMap<u32, GuessGame>("g");
+export const games = new PersistentMap<u32, GuessGame>("games");

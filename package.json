@@ -5,10 +5,12 @@
   "license": "MIT",
   "dependencies": {
     "@assemblyscript/loader": "^0.20.4",
+    "@types/jest": "^27.4.1",
     "asbuild": "^0.2.0",
     "assemblyscript": "^0.20.4",
     "near-cli": "^3.2.0",
-    "near-sdk-as": "^3.2.3"
+    "near-sdk-as": "^3.2.3",
+    "ts-jest": "^27.1.4"
   },
   "type": "module",
   "exports": {
@@ -21,9 +23,11 @@
     "build:release": "asb",
     "deploy": "near dev-deploy build/release/guess-game.wasm",
     "dev": "yarn build:release && yarn deploy",
-    "test": "asp"
+    "test": "jest"
   },
   "devDependencies": {
-    "assemblyscript": "^0.20.4"
+    "assemblyscript": "^0.20.4",
+    "jest": "^27.5.1",
+    "typescript": "^4.6.3"
   }
 }
