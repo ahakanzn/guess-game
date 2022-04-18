@@ -1,8 +1,8 @@
-import { Context } from "near-sdk-as";
+import { context, PersistentUnorderedMap, PersistentVector, u128 } from "near-sdk-as";
 import { GuessGame, GameState, games } from "./model";
 
 export function createGame(): GuessGame {
-  return GuessGame.createGame(Context.sender);
+  return GuessGame.createGame();
 }
 
 export function startGame(gameId: u32): GuessGame {
@@ -24,3 +24,7 @@ export function getGames(start: u32, limit: u32): GuessGame[] {
 export function getGame(gameId: u32): GuessGame {
   return GuessGame.findGameById(gameId);
 }
+/*
+export function getMap(gameId: u32): Array<string>[] {
+  return GuessGame.getGameMap(gameId);
+}*/

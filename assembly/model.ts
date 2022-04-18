@@ -1,4 +1,4 @@
-import { RNG, Context, u128, PersistentVector, PersistentUnorderedMap, ContractPromiseBatch } from "near-sdk-as";
+import { RNG, u128, PersistentVector, PersistentUnorderedMap, ContractPromiseBatch, logging, context } from "near-sdk-as";
 
 export enum GameState {
   Created,
@@ -11,9 +11,8 @@ export class GuessGame {
   gameId: u32;
   gameState: GameState;
   awardAmount: u128;
-  creator: string = Context.sender;
-  guessMap: PersistentUnorderedMap<u128, PersistentVector<string>> = new PersistentUnorderedMap<u128, PersistentVector<string>>("map");
-
+  creator: string = context.sender;
+  guessMap: PersistentUnorderedMap<u128, Array<string>> = new PersistentUnorderedMap<u128, Array<string>>("guesses");
   constructor() {
     let rng = new RNG<u32>(1, u32.MAX_VALUE);
     let roll = rng.next();
@@ -21,13 +20,15 @@ export class GuessGame {
 
     this.gameState = GameState.Created;
     this.awardAmount = u128.Zero;
-    this.creator = Context.sender;
+    this.creator = context.sender;
   }
 
-  static createGame(creator: string): GuessGame {
+  static createGame(): GuessGame {
     const game = new GuessGame();
+    logging.log("game created");
     game.gameState = GameState.Created;
     games.set(game.gameId, game);
+    logging.log("mape atıldı");
     return game;
   }
 
@@ -35,7 +36,7 @@ export class GuessGame {
     assert(games.contains(gameId), "There is no such a game, please create one first!");
     const game = games.get(gameId)!;
 
-    assert(game.creator == Context.sender, "You have not created this game thus you can't start it!");
+    assert(game.creator == context.sender, "You have not created this game thus you can't start it!");
     assert(game.gameState != GameState.InProgress, "Game is already started!");
 
     game.gameState = GameState.InProgress;
@@ -43,40 +44,56 @@ export class GuessGame {
     return game;
   }
 
+  checkMap(attachedDeposit: u128, sender: string): void {
+    let mapVal = new Array<string>();
+    if (this.guessMap.contains(attachedDeposit)) {
+      logging.log("ife girdi");
+      mapVal = this.guessMap.getSome(attachedDeposit);
+      mapVal.push(sender);
+      this.guessMap.set(attachedDeposit, mapVal);
+    } else {
+      logging.log("else girdi");
+      mapVal.push(sender);
+      this.guessMap.set(attachedDeposit, mapVal);
+    }
+  }
+
   static makeGuess(gameId: u32): GuessGame {
     assert(games.contains(gameId), "Game does not exists!");
     const game = games.get(gameId)!;
 
-    assert(game.creator != Context.sender, "You can not join your own game!");
-    assert(game.gameState != GameState.InProgress, "Game is not started yet or already finished!");
-    assert(!Context.attachedDeposit.isZero || !isNull(Context.attachedDeposit), "You have to add some deposit to play the game!");
+    assert(game.creator != context.sender, "You can not join your own game!");
+    assert(game.gameState == GameState.InProgress, "Game is not started yet or already finished!");
+    assert(!context.attachedDeposit.isZero || !isNull(context.attachedDeposit), "You have to add some deposit to play the game!");
 
-    let attachedDeposit = Context.attachedDeposit;
-    let mapVal = game.guessMap.get(attachedDeposit, new PersistentVector<string>("new"));
-    if (!isNull(mapVal) || mapVal!.isEmpty) {
-      mapVal!.push(Context.sender);
-      game.guessMap.set(attachedDeposit, mapVal!);
-    } else {
-      mapVal = new PersistentVector<string>("s");
-      mapVal.push(Context.sender);
-      game.guessMap.set(attachedDeposit, mapVal);
-    }
-    game.awardAmount = u128.add(game.awardAmount, Context.attachedDeposit);
+    let attachedDeposit = context.attachedDeposit;
+    const sender = context.sender;
+    logging.log("Tahmin yapan: " + sender);
+    game.checkMap(attachedDeposit, sender);
+    game.awardAmount = u128.add(game.awardAmount, context.attachedDeposit);
     games.set(gameId, game);
     return game;
   }
+
+  /*static getGameMap(gameId: u32): Array<string>[] {
+    const game = games.getSome(gameId);
+    return game.guessMap.values(0);
+  }*/
 
   static finishGame(gameId: u32): string {
     assert(games.contains(gameId), "There is no such a game, please create one first!");
 
     const game = games.get(gameId)!;
-    assert(game.creator == Context.sender, "You have not created this game thus you can't finish it!");
+    assert(game.creator == context.sender, "You have not created this game thus you can't finish it!");
+    let winnerId: string = "";
+    let sortedKeys = game.guessMap.keys(0, game.guessMap.length).sort();
+    for (let i = 0; i < sortedKeys.length; i++) {
+      if (game.guessMap.get(sortedKeys.at(i))!.length == 1) {
+        winnerId = game.guessMap.get(sortedKeys.at(i))!.at(0)!;
+      }
+    }
+    logging.log("winner: " + winnerId);
 
-    game.guessMap.keys(0, game.guessMap.length).sort();
-    let winner = game.guessMap
-      .values(0, game.guessMap.length)
-      .reduce((a: PersistentVector<string>, b: PersistentVector<string>) => (a.length <= b.length ? a : b), game.guessMap.values(0, 1).at(0));
-    let winnerId = winner.first.toString();
     assert(!isNull(winnerId), "No one won the game!");
 
     const to_winner = ContractPromiseBatch.create(winnerId);
@@ -98,5 +115,3 @@ export class GuessGame {
 }
 
 export const games = new PersistentUnorderedMap<u32, GuessGame>("games");
-
-// An optimized version of Bubble Sort
