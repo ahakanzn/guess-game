@@ -24,7 +24,3 @@ export function getGames(start: u32, limit: u32): GuessGame[] {
 export function getGame(gameId: u32): GuessGame {
   return GuessGame.findGameById(gameId);
 }
-/*
-export function getMap(gameId: u32): Array<string>[] {
-  return GuessGame.getGameMap(gameId);
-}*/

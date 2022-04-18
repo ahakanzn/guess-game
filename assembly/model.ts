@@ -25,10 +25,8 @@ export class GuessGame {
 
   static createGame(): GuessGame {
     const game = new GuessGame();
-    logging.log("game created");
     game.gameState = GameState.Created;
     games.set(game.gameId, game);
-    logging.log("mape atıldı");
     return game;
   }
 
@@ -47,12 +45,10 @@ export class GuessGame {
   checkMap(attachedDeposit: u128, sender: string): void {
     let mapVal = new Array<string>();
     if (this.guessMap.contains(attachedDeposit)) {
-      logging.log("ife girdi");
       mapVal = this.guessMap.getSome(attachedDeposit);
       mapVal.push(sender);
       this.guessMap.set(attachedDeposit, mapVal);
     } else {
-      logging.log("else girdi");
       mapVal.push(sender);
       this.guessMap.set(attachedDeposit, mapVal);
     }
@@ -68,17 +64,11 @@ export class GuessGame {
 
     let attachedDeposit = context.attachedDeposit;
     const sender = context.sender;
-    logging.log("Tahmin yapan: " + sender);
     game.checkMap(attachedDeposit, sender);
     game.awardAmount = u128.add(game.awardAmount, context.attachedDeposit);
     games.set(gameId, game);
     return game;
   }
-
-  /*static getGameMap(gameId: u32): Array<string>[] {
-    const game = games.getSome(gameId);
-    return game.guessMap.values(0);
-  }*/
 
   static finishGame(gameId: u32): string {
     assert(games.contains(gameId), "There is no such a game, please create one first!");
@@ -92,7 +82,6 @@ export class GuessGame {
         winnerId = game.guessMap.get(sortedKeys.at(i))!.at(0)!;
       }
     }
-    logging.log("winner: " + winnerId);
 
     assert(!isNull(winnerId), "No one won the game!");
 
