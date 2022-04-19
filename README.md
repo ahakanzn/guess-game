@@ -3,7 +3,7 @@ This is a game where players tries to deposit least unique amount of money. Cont
 award gets transferred to the player who made the miniumum unique deposit. 
 
 ## Loom Video
-![Loom Video](https://www.loom.com/share/c47859a778da4f1db0b242ac09449f2f)
+https://www.loom.com/share/c47859a778da4f1db0b242ac09449f2f
 
 
 ## Installition
