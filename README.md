@@ -1,6 +1,11 @@
 # guess-game
 This is a game where players tries to deposit least unique amount of money. Contract collects all deposits in a poll and when the game is finished,
 award gets transferred to the player who made the miniumum unique deposit. 
+
+## Loom Video
+![Loom Video](https://www.loom.com/share/c47859a778da4f1db0b242ac09449f2f)
+
+
 ## Installition
 * Clone this repository to your computer.
 ```
